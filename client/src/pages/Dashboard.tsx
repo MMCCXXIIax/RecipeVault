@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const fmt = (v: any, d: number = 2) => (typeof v === 'number' && isFinite(v) ? v.toFixed(d) : '--');
   
   // API Hooks
   const { data: trendingData, isLoading: isLoadingTrending, refetch: refetchMovers } = useMarketScan(topType);
@@ -262,15 +263,15 @@ export default function Dashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right font-mono font-semibold">
-                            ${stock.price.toFixed(2)}
+                            ${fmt(stock.price, 2)}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <span className={`font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                              {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
+                            <span className={`font-semibold ${typeof stock.changePercent === 'number' && stock.changePercent >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {typeof stock.changePercent === 'number' && stock.changePercent >= 0 ? '+' : ''}{typeof stock.changePercent === 'number' ? stock.changePercent.toFixed(2) : '--'}%
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right text-muted-foreground">
-                            {(stock.volume / 1000000).toFixed(1)}M
+                            {typeof stock.volume === 'number' ? (stock.volume / 1000000).toFixed(1) + 'M' : '--'}
                           </td>
                           <td className="px-6 py-4 text-right">
                             <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80" data-testid={`button-view-${stock.symbol}`} onClick={() => handleViewSymbol(stock.symbol)}>
@@ -399,7 +400,7 @@ export default function Dashboard() {
                             <span className="text-muted-foreground">Confidence:</span>
                             <span className="text-success font-semibold font-mono">{alert.confidence_pct}%</span>
                             <span className="text-muted-foreground">Price:</span>
-                            <span className="text-foreground font-semibold font-mono">${alert.price.toFixed(2)}</span>
+                            <span className="text-foreground font-semibold font-mono">${fmt(alert.price, 2)}</span>
                           </div>
                           <Button variant="ghost" size="sm" className="text-xs text-primary hover:underline" data-testid={`button-alert-details-${alert.id}`} onClick={() => handleAlertDetails(alert)}>
                             Details

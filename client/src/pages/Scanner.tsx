@@ -47,6 +47,7 @@ export default function Scanner() {
   });
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const fmt = (v: any, d: number = 2) => (typeof v === 'number' && isFinite(v) ? v.toFixed(d) : '--');
 
   // API Hooks
   const { data: scannerData, isLoading: isLoadingStatus } = useScannerStatus();
@@ -266,10 +267,9 @@ export default function Scanner() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Coverage Rate</span>
                   <span className="text-foreground font-semibold">
-                    {scannerStatus && coverage 
-                      ? `${((scannerStatus.symbols_scanned / coverage.total_assets) * 100).toFixed(1)}%`
-                      : '0%'
-                    }
+                    {scannerStatus && coverage && typeof coverage.total_assets === 'number' && coverage.total_assets > 0
+                      ? `${(((scannerStatus.symbols_scanned || 0) / coverage.total_assets) * 100).toFixed(1)}%`
+                      : '0%'}
                   </span>
                 </div>
                 <Progress 
@@ -374,10 +374,10 @@ export default function Scanner() {
                           </div>
                           <div className="text-right">
                             <div className="text-sm font-mono font-semibold text-foreground">
-                              ${result.price.toFixed(2)}
+                              ${fmt(result.price, 2)}
                             </div>
                             <div className={`text-xs ${result.change_percent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                              {result.change_percent >= 0 ? '+' : ''}{result.change_percent.toFixed(2)}%
+                              {typeof result.change_percent === 'number' && result.change_percent >= 0 ? '+' : ''}{typeof result.change_percent === 'number' ? result.change_percent.toFixed(2) : '--'}%
                             </div>
                           </div>
                         </div>

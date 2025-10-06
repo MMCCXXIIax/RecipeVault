@@ -35,6 +35,7 @@ export default function PaperTrade() {
   const [selectedSide, setSelectedSide] = useState<'BUY' | 'SELL'>('BUY');
   const [isTxOpen, setIsTxOpen] = useState(false);
   const { toast } = useToast();
+  const fmt = (v: any, d: number = 2) => (typeof v === 'number' && isFinite(v) ? v.toFixed(d) : '--');
 
   // API Hooks
   const { data: tradesData, isLoading: isLoadingTrades } = usePaperTrades();
@@ -168,7 +169,7 @@ export default function PaperTrade() {
                   <h3 className="text-sm font-medium text-muted-foreground">Today's P&L</h3>
                 </div>
                 <p className={`text-2xl font-bold font-mono mb-1 ${dailyPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  {dailyPnL >= 0 ? '+' : ''}${dailyPnL.toLocaleString()}
+                  {dailyPnL >= 0 ? '+' : ''}${Number.isFinite(dailyPnL) ? dailyPnL.toLocaleString() : '0'}
                 </p>
                 <p className={`text-sm ${dailyPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {dailyPnLPercent >= 0 ? '+' : ''}{dailyPnLPercent.toFixed(2)}%
@@ -233,18 +234,18 @@ export default function PaperTrade() {
                           </td>
                           <td className="px-6 py-4 text-right font-mono">{position.quantity}</td>
                           <td className="px-6 py-4 text-right font-mono font-semibold">
-                            ${position.entry_price.toFixed(2)}
+                            ${fmt(position.entry_price, 2)}
                           </td>
                           <td className="px-6 py-4 text-right font-mono font-semibold">
-                            ${position.current_price.toFixed(2)}
+                            ${fmt(position.current_price, 2)}
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex flex-col">
-                              <span className={`font-semibold font-mono ${position.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
+                              <span className={`font-semibold font-mono ${typeof position.pnl === 'number' && position.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {typeof position.pnl === 'number' && position.pnl >= 0 ? '+' : ''}${typeof position.pnl === 'number' ? position.pnl.toFixed(2) : '--'}
                               </span>
-                              <span className={`text-xs ${position.pnl_percent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                {position.pnl_percent >= 0 ? '+' : ''}{position.pnl_percent.toFixed(2)}%
+                              <span className={`text-xs ${typeof position.pnl_percent === 'number' && position.pnl_percent >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {typeof position.pnl_percent === 'number' && position.pnl_percent >= 0 ? '+' : ''}{typeof position.pnl_percent === 'number' ? position.pnl_percent.toFixed(2) : '--'}%
                               </span>
                             </div>
                           </td>
@@ -318,9 +319,9 @@ export default function PaperTrade() {
                           </Badge>
                         </td>
                         <td className="px-6 py-4 text-right font-mono">{position.quantity}</td>
-                        <td className="px-6 py-4 text-right font-mono">${position.entry_price.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-right font-mono">${fmt(position.entry_price, 2)}</td>
                         <td className="px-6 py-4 text-right font-mono font-semibold">
-                          ${(position.quantity * position.entry_price).toFixed(2)}
+                          {typeof position.quantity === 'number' && typeof position.entry_price === 'number' ? (position.quantity * position.entry_price).toFixed(2) : '--'}
                         </td>
                       </tr>
                     ))}
