@@ -1,0 +1,164 @@
+You are an expert React + Tailwind frontend engineer. Build a **full production-ready React frontend** for **TX Predictive Intelligence**, a trading SaaS with real-time market data, candlestick pattern detection, scanning, alerts, paper trading, backtesting, sentiment, and risk/recommendation features.
+
+The backend is a Flask API, already live, with the following specs:
+
+---
+
+### 1. Backend Info
+
+- **Base URL**: http://localhost:5000 or deployed URL  
+- **Content-Type**: application/json  
+- **Auth**: None  
+- **CORS**: Configured for frontend origins  
+- **Rate limits**: As documented per endpoint  
+- **Success response**: `{"success": true, "data": ...}`  
+- **Error response**: `{"success": false, "error": "<message>"}`
+
+---
+
+### 2. Core API Endpoints
+
+**Market Data**
+- GET `/api/market-scan?type=trending|volume` → top ~10 instruments  
+- GET `/api/market/<symbol>` → current price snapshot  
+- GET `/api/candles?symbol=&period=1d&interval=1h` → OHLCV candles
+
+**Live Scanning**
+- POST/GET `/api/scan/start` → `{symbols?: string[], interval: number, auto_alerts: boolean}`  
+- POST `/api/scan/stop`  
+- GET `/api/scan/status` → `{active, last_scan, patterns_found}`  
+- GET `/api/scan/config`, POST `/api/scan/config`
+
+**Pattern Detection**
+- POST `/api/detect-enhanced` → `{symbol: string}`  
+- GET `/api/pattern-stats`  
+- GET `/api/patterns/list`  
+- GET `/api/explain/pattern/<pattern_name>`  
+- POST `/api/explain/alert` → `{alert_id | alert_type, symbol?}`
+
+**Sentiment**
+- GET `/api/sentiment/<symbol>`  
+- POST `/api/sentiment/enhance-confidence`  
+- POST `/api/sentiment/alert-condition`  
+- GET `/api/sentiment/twitter-health`
+
+**Entry/Exit Signals**
+- GET `/api/signals/entry-exit?symbol=&timeframe=&type=all|entry|exit`  
+- POST `/api/signals/entry-exit` → `{symbols: string[], timeframe, min_confidence}`
+
+**Alerts**
+- GET `/api/get_active_alerts`  
+- POST `/api/alerts/dismiss/<alert_id:int>`  
+- POST `/api/handle_alert_response` → `{alert_id, response, action?}`
+
+**Paper Trading**
+- GET `/api/paper-trades`  
+- POST `/api/paper-trades` → `{symbol, side=BUY|SELL, quantity, price?, pattern?, confidence?}`  
+- POST `/api/close-position` → `{symbol | trade_id}`
+
+**Backtesting**
+- GET `/api/strategies`  
+- POST `/api/backtest`, `/api/backtest/pattern`, `/api/backtest/strategy`
+
+**Analytics & Reporting**
+- GET `/api/analytics/summary`  
+- GET `/api/trading-stats`  
+- GET `/api/detection_stats`  
+- GET `/api/detection_logs?limit=&offset=&symbol=&pattern=`  
+- GET `/api/export_detection_logs?symbol=&pattern=&days=30`
+
+**Risk & Recommendations**
+- GET `/api/risk-settings`  
+- POST `/api/risk-settings`  
+- POST `/api/risk/pre-trade-check` → returns `risk_confirmation_token`  
+- GET `/api/recommend/complete?symbol=<symbol>`
+
+**Data Coverage**
+- GET `/api/assets/list`  
+- GET `/api/features`  
+- GET `/api/coverage`
+
+**User Profile**
+- POST `/api/save-profile` → `{user_id, email?, display_name?, avatar_url?, preferences?}`
+
+---
+
+### 3. WebSocket Events (Socket.IO)
+
+- Connect to base URL  
+- Events emitted:  
+  - `connection_status` → on connect  
+  - `subscription_status` → after subscribe events  
+  - `scan_update` → `{symbol, intraday_patterns, context_patterns, timestamp}`  
+  - `pattern_alert` → `{symbol, alert_type, confidence_pct, price, timestamp, metadata?}`  
+- Client-side subscribe events: `subscribe_alerts`, `subscribe_scan_results`
+
+---
+
+### 4. Pages / Features to Implement
+
+**Dashboard**
+- Top movers (price + change%)  
+- Live alerts panel (Socket.IO)  
+- Coverage stats (scanned vs total)  
+
+**Charts / Pattern Detection**
+- Candlestick chart per asset (react-chartjs-2 or chart.js)  
+- Detect patterns button → `/api/detect-enhanced`  
+- Display detected patterns with confidence (colored badge/progress)  
+
+**Paper Trading**
+- Portfolio overview  
+- Buy/Sell form → `/api/paper-trades`  
+- Transaction history  
+
+**Scan Control**
+- Start/Stop scan  
+- Show scanning status live  
+
+**Backtesting**
+- Simple UI for running strategy/pattern backtests  
+- Show equity curve and trade list  
+
+**Sentiment & Signals**
+- Display sentiment for selected asset  
+- Show entry/exit signals  
+
+**Risk & Recommendation**
+- Pre-trade risk check form  
+- Show recommended action and risk summary  
+
+**Global Components**
+- Responsive top navigation bar  
+- Dark minimalist theme: black, sky blue, blue  
+- Mobile-friendly layout  
+- Reusable cards, tables, alerts, buttons
+
+---
+
+### 5. UX/UI Guidelines
+
+- Modern, minimal, clean interface  
+- Grid layout for cards on Dashboard  
+- Alerts chronological with timestamp  
+- Highlight positive/negative values green/red  
+- Charts interactive  
+- Onboarding modal: brief explanation of pattern detection & paper trading  
+
+---
+
+### 6. Deliverable
+
+- Full React + Vite project  
+- Tailwind styling everywhere  
+- Axios API client setup (`apiClient.js`)  
+- Socket.IO handler (`socket.js`)  
+- Pages: `Dashboard.jsx`, `Charts.jsx`, `PaperTrade.jsx`, `ScanControl.jsx`, etc.  
+- App routing in `App.jsx`  
+- Environment variable usage (`VITE_API_BASE`, `VITE_SOCKET_BASE`)  
+- Fully functional, ready to run: `npm install && npm run dev`  
+- No placeholder data — integrate live API and WebSocket streams  
+
+---
+
+**Instruction for Replit AI**: generate the complete project files, components, routing, API client, Socket.IO wiring, and Tailwind UI as a ready-to-copy frontend repo that can be pasted directly into Replit or Vercel. Include comments and proper structure for production readiness.
