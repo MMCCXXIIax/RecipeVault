@@ -56,6 +56,13 @@ export default function SentimentSignals() {
       exit?: SignalItem[];
     });
 
+  const toArray = (v: unknown): SignalItem[] => (Array.isArray(v) ? (v as SignalItem[]) : []);
+  const signalRows: SignalItem[] = [
+    ...toArray(signals.all),
+    ...toArray(signals.entry),
+    ...toArray(signals.exit),
+  ];
+
   return (
     <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
@@ -151,7 +158,7 @@ export default function SentimentSignals() {
               </div>
             </CardHeader>
             <CardContent>
-              {(!signals || (!signals.all?.length && !signals.entry?.length && !signals.exit?.length)) ? (
+              {signalRows.length === 0 ? (
                 <p className="text-muted-foreground">No signals available.</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -165,7 +172,7 @@ export default function SentimentSignals() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {(signals.all || signals.entry || signals.exit || []).map((sig: SignalItem, idx: number) => (
+                      {signalRows.map((sig: SignalItem, idx: number) => (
                         <tr key={idx}>
                           <td className="px-4 py-2 font-mono">{sig.timestamp ? new Date(sig.timestamp).toLocaleString() : '—'}</td>
                           <td className="px-4 py-2">
