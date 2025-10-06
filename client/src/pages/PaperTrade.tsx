@@ -21,6 +21,7 @@ import { riskAPI } from '@/lib/apiClient';
 import { useQuery } from '@tanstack/react-query';
 import type { Position, Trade } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { InfoModal } from '@/components/InfoModal';
 
 interface TradeForm {
   symbol: string;
@@ -32,6 +33,7 @@ interface TradeForm {
 
 export default function PaperTrade() {
   const [selectedSide, setSelectedSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [isTxOpen, setIsTxOpen] = useState(false);
   const { toast } = useToast();
 
   // API Hooks
@@ -273,7 +275,7 @@ export default function PaperTrade() {
             <CardHeader className="border-b border-border">
               <div className="flex items-center justify-between">
                 <CardTitle>Recent Transactions</CardTitle>
-                <Button variant="ghost" size="sm" className="text-primary hover:underline" data-testid="button-view-all-transactions">
+                <Button variant="ghost" size="sm" className="text-primary hover:underline" data-testid="button-view-all-transactions" onClick={() => setIsTxOpen(true)}>
                   View All
                 </Button>
               </div>

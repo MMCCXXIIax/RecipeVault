@@ -9,6 +9,8 @@ import Charts from "@/pages/Charts";
 import PaperTrade from "@/pages/PaperTrade";
 import Scanner from "@/pages/Scanner";
 import Backtest from "@/pages/Backtest";
+import SentimentSignals from "@/pages/SentimentSignals";
+import RiskRecommend from "@/pages/RiskRecommend";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +22,8 @@ function Router() {
         <Route path="/paper-trade" component={PaperTrade} />
         <Route path="/scanner" component={Scanner} />
         <Route path="/backtest" component={Backtest} />
+        <Route path="/sentiment-signals" component={SentimentSignals} />
+        <Route path="/risk" component={RiskRecommend} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

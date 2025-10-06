@@ -28,6 +28,7 @@ import { scannerAPI, dataAPI } from '@/lib/apiClient';
 import { useQuery } from '@tanstack/react-query';
 import type { ScannerStatus, Pattern } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 interface ScanResult {
   symbol: string;
@@ -45,6 +46,7 @@ export default function Scanner() {
     symbols: '',
   });
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // API Hooks
   const { data: scannerData, isLoading: isLoadingStatus } = useScannerStatus();
@@ -223,7 +225,7 @@ export default function Scanner() {
                 </Button>
               </div>
 
-              <Button variant="outline" className="w-full" data-testid="button-advanced-settings">
+              <Button variant="outline" className="w-full" data-testid="button-advanced-settings" onClick={() => setLocation('/scanner?view=advanced')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Advanced Settings
               </Button>
@@ -419,7 +421,7 @@ export default function Scanner() {
 
                         <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                           <span>{new Date(result.timestamp).toLocaleTimeString()}</span>
-                          <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 h-6 text-xs" data-testid={`button-view-details-${result.symbol}-${index}`}>
+                          <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 h-6 text-xs" data-testid={`button-view-details-${result.symbol}-${index}`} onClick={() => setLocation(`/charts?symbol=${encodeURIComponent(result.symbol)}`)}>
                             <Eye className="h-3 w-3 mr-1" />
                             View Details
                           </Button>
@@ -431,7 +433,7 @@ export default function Scanner() {
               </div>
               {scanResults.length > 0 && (
                 <div className="p-4 border-t border-border">
-                  <Button variant="ghost" className="w-full text-sm" data-testid="button-view-all-results">
+                  <Button variant="ghost" className="w-full text-sm" data-testid="button-view-all-results" onClick={() => setLocation('/charts')}>
                     View All Results <Zap className="h-4 w-4 ml-2" />
                   </Button>
                 </div>

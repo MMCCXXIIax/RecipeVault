@@ -22,6 +22,8 @@ const navItems = [
   { path: '/paper-trade', icon: Wallet, label: 'Paper Trade' },
   { path: '/scanner', icon: Radar, label: 'Scanner' },
   { path: '/backtest', icon: History, label: 'Backtest' },
+  { path: '/sentiment-signals', icon: CandlestickChart, label: 'Sentiment & Signals' },
+  { path: '/risk', icon: Radar, label: 'Risk & Rec' },
 ];
 
 export function Navigation() {

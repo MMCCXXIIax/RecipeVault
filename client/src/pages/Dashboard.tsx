@@ -22,15 +22,22 @@ import { useMarketScan, useActiveAlerts, useScannerStatus, useStartScanner, useS
 import { useSocket } from '@/hooks/useSocket';
 import type { Alert, MarketData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { patternAPI } from '@/lib/apiClient';
+import { useLocation } from 'wouter';
+import { InfoModal } from '@/components/InfoModal';
 
 export default function Dashboard() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [topType, setTopType] = useState<'trending' | 'volume'>('trending');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<React.ReactNode>(null);
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   
   // API Hooks
-  const { data: trendingData, isLoading: isLoadingTrending } = useMarketScan('trending');
-  const { data: alertsData } = useActiveAlerts();
-  const { data: scannerData } = useScannerStatus();
+  const { data: trendingData, isLoading: isLoadingTrending, refetch: refetchMovers } = useMarketScan(topType);
+  const { data: alertsData, refetch: refetchAlerts } = useActiveAlerts();
+  const { data: scannerData, refetch: refetchScanner } = useScannerStatus();
   const startScannerMutation = useStartScanner();
   const stopScannerMutation = useStopScanner();
   
@@ -72,6 +79,35 @@ export default function Dashboard() {
     stopScannerMutation.mutate();
   };
 
+  const handleRefresh = () => {
+    refetchMovers();
+    refetchAlerts();
+    refetchScanner();
+  };
+
+  const handleViewSymbol = (symbol: string) => {
+    setLocation(`/charts?symbol=${encodeURIComponent(symbol)}`);
+  };
+
+  const handleConfigureScanner = () => {
+    setLocation('/scanner');
+  };
+
+  const handleAlertDetails = async (alert: Alert) => {
+    try {
+      const res = await patternAPI.explainAlert({ alert_id: alert.id, symbol: alert.symbol, alert_type: alert.alert_type });
+      setModalContent(
+        <div>
+          <p className="mb-2 text-sm text-muted-foreground">{new Date(alert.timestamp).toLocaleString()}</p>
+          <pre className="whitespace-pre-wrap text-xs bg-muted p-2 rounded-md border border-border">{JSON.stringify(res.data, null, 2)}</pre>
+        </div>
+      );
+      setIsModalOpen(true);
+    } catch (e) {
+      toast({ title: 'Details unavailable', description: e instanceof Error ? e.message : 'Failed to fetch alert details', variant: 'destructive' });
+    }
+  };
+
   const topMovers = trendingData?.data || [];
   const scannerStatus = scannerData?.data;
   const coveragePercent = scannerStatus ? (scannerStatus.symbols_scanned / 500) * 100 : 49;
@@ -86,11 +122,11 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Real-time market overview and active alerts</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm" data-testid="button-filter">
+            <Button variant="outline" size="sm" data-testid="button-filter" onClick={() => setTopType(prev => prev === 'trending' ? 'volume' : 'trending')}>
               <Filter className="h-4 w-4 mr-2" />
-              Filter
+              {topType === 'trending' ? 'Show Volume' : 'Show Trending'}
             </Button>
-            <Button size="sm" data-testid="button-refresh">
+            <Button size="sm" data-testid="button-refresh" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -173,10 +209,10 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle>Top Movers</CardTitle>
                 <div className="flex space-x-2">
-                  <Button variant="secondary" size="sm" className="bg-primary text-primary-foreground">
+                  <Button variant={topType === 'trending' ? 'secondary' : 'ghost'} size="sm" className={topType === 'trending' ? 'bg-primary text-primary-foreground' : ''} onClick={() => setTopType('trending')}>
                     Trending
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant={topType === 'volume' ? 'secondary' : 'ghost'} size="sm" className={topType === 'volume' ? 'bg-primary text-primary-foreground' : ''} onClick={() => setTopType('volume')}>
                     Volume
                   </Button>
                 </div>
@@ -237,7 +273,7 @@ export default function Dashboard() {
                             {(stock.volume / 1000000).toFixed(1)}M
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80" data-testid={`button-view-${stock.symbol}`}>
+                            <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80" data-testid={`button-view-${stock.symbol}`} onClick={() => handleViewSymbol(stock.symbol)}>
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
@@ -319,7 +355,7 @@ export default function Dashboard() {
               </div>
 
               {/* Config Link */}
-              <Button variant="ghost" className="w-full" data-testid="button-configure-scanner">
+              <Button variant="ghost" className="w-full" data-testid="button-configure-scanner" onClick={handleConfigureScanner}>
                 <Settings className="h-4 w-4 mr-2" />
                 Configure Scanner
               </Button>
@@ -365,7 +401,7 @@ export default function Dashboard() {
                             <span className="text-muted-foreground">Price:</span>
                             <span className="text-foreground font-semibold font-mono">${alert.price.toFixed(2)}</span>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-xs text-primary hover:underline" data-testid={`button-alert-details-${alert.id}`}>
+                          <Button variant="ghost" size="sm" className="text-xs text-primary hover:underline" data-testid={`button-alert-details-${alert.id}`} onClick={() => handleAlertDetails(alert)}>
                             Details
                           </Button>
                         </div>
@@ -376,7 +412,7 @@ export default function Dashboard() {
               </div>
               {alerts.length > 0 && (
                 <div className="p-4 border-t border-border">
-                  <Button variant="ghost" className="w-full text-sm" data-testid="button-view-all-alerts">
+                  <Button variant="ghost" className="w-full text-sm" data-testid="button-view-all-alerts" onClick={() => setLocation('/scanner')}>
                     View All Alerts <ArrowUp className="h-4 w-4 ml-2 rotate-45" />
                   </Button>
                 </div>
@@ -385,6 +421,10 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      <InfoModal open={isModalOpen} onOpenChange={setIsModalOpen} title="Alert Details">
+        {modalContent}
+      </InfoModal>
     </div>
   );
 }

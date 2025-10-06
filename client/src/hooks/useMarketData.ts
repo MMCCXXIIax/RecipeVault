@@ -1,19 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { marketAPI, scannerAPI, patternAPI, alertsAPI, paperTradingAPI } from '@/lib/apiClient';
+import { marketAPI, scannerAPI, patternAPI, alertsAPI, paperTradingAPI, type ApiResponse } from '@/lib/apiClient';
 import type { MarketData, Pattern, Alert, Position, ScannerStatus } from '@/types';
 
 export function useMarketScan(type: 'trending' | 'volume') {
-  return useQuery<{ success: boolean; data: MarketData[] }>({
+  return useQuery<ApiResponse<MarketData[]>>({
     queryKey: ['/api/market-scan', type],
-    queryFn: () => marketAPI.getMarketScan(type) as Promise<{ success: boolean; data: MarketData[] }>,
+    queryFn: () => marketAPI.getMarketScan(type) as unknown as Promise<ApiResponse<MarketData[]>>,
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 }
 
 export function useMarketData(symbol: string) {
-  return useQuery<{ success: boolean; data: MarketData }>({
+  return useQuery<ApiResponse<MarketData>>({
     queryKey: ['/api/market', symbol],
-    queryFn: () => marketAPI.getMarketData(symbol) as Promise<{ success: boolean; data: MarketData }>,
+    queryFn: () => marketAPI.getMarketData(symbol) as unknown as Promise<ApiResponse<MarketData>>,
     refetchInterval: 5000, // Refetch every 5 seconds
     enabled: !!symbol,
   });
@@ -29,9 +29,9 @@ export function useCandles(symbol: string, period: string, interval: string) {
 }
 
 export function useScannerStatus() {
-  return useQuery<{ success: boolean; data: ScannerStatus }>({
+  return useQuery<ApiResponse<ScannerStatus>>({
     queryKey: ['/api/scan/status'],
-    queryFn: () => scannerAPI.getStatus() as Promise<{ success: boolean; data: ScannerStatus }>,
+    queryFn: () => scannerAPI.getStatus() as unknown as Promise<ApiResponse<ScannerStatus>>,
     refetchInterval: 10000, // Refetch every 10 seconds
   });
 }
@@ -49,17 +49,17 @@ export function usePatternDetection() {
 }
 
 export function useActiveAlerts() {
-  return useQuery<{ success: boolean; data: Alert[] }>({
+  return useQuery<ApiResponse<Alert[]>>({
     queryKey: ['/api/get_active_alerts'],
-    queryFn: () => alertsAPI.getActiveAlerts() as Promise<{ success: boolean; data: Alert[] }>,
+    queryFn: () => alertsAPI.getActiveAlerts() as unknown as Promise<ApiResponse<Alert[]>>,
     refetchInterval: 15000, // Refetch every 15 seconds
   });
 }
 
 export function usePaperTrades() {
-  return useQuery<{ success: boolean; data: Position[] }>({
+  return useQuery<ApiResponse<Position[]>>({
     queryKey: ['/api/paper-trades'],
-    queryFn: () => paperTradingAPI.getTrades() as Promise<{ success: boolean; data: Position[] }>,
+    queryFn: () => paperTradingAPI.getTrades() as unknown as Promise<ApiResponse<Position[]>>,
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 }

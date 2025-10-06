@@ -106,11 +106,14 @@
   }
 
   .badge-success {
-    @apply bg-success/15 text-success border border-success;
+    /* Tailwind can't parse bg-success/15 when success is a CSS var */
+    @apply text-success border border-success;
+    background-color: hsla(142, 71%, 45%, 0.15);
   }
 
   .badge-danger {
-    @apply bg-destructive/15 text-destructive border border-destructive;
+    @apply text-destructive border border-destructive;
+    background-color: hsla(0, 84%, 60%, 0.15);
   }
 
   .badge-warning {
@@ -119,7 +122,8 @@
   }
 
   .badge-info {
-    @apply bg-primary/15 text-primary border border-primary;
+    @apply text-primary border border-primary;
+    background-color: hsla(199, 89%, 48%, 0.15);
   }
 }
 

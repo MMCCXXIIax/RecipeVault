@@ -15,10 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { CandlestickChart } from '@/components/charts/CandlestickChart';
 import { useCandles, usePatternDetection } from '@/hooks/useMarketData';
-import { sentimentAPI, signalsAPI, recommendationAPI } from '@/lib/apiClient';
+import { sentimentAPI, signalsAPI, recommendationAPI, patternAPI, paperTradingAPI } from '@/lib/apiClient';
 import { useQuery } from '@tanstack/react-query';
 import type { Pattern, SentimentData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { InfoModal } from '@/components/InfoModal';
 
 const symbols = [
   { value: 'AAPL', label: 'AAPL - Apple Inc.' },
@@ -39,6 +40,8 @@ export default function Charts() {
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
   const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
   const [detectedPatterns, setDetectedPatterns] = useState<Pattern[]>([]);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [infoContent, setInfoContent] = useState<React.ReactNode>(null);
   const { toast } = useToast();
 
   // API Hooks
@@ -73,6 +76,34 @@ export default function Charts() {
         description: error instanceof Error ? error.message : "Failed to detect patterns",
         variant: "destructive",
       });
+    }
+  };
+
+  // Read ?symbol= from querystring on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const qsSymbol = params.get('symbol');
+    if (qsSymbol) setSelectedSymbol(qsSymbol.toUpperCase());
+  }, []);
+
+  const handleAddToPaperTrading = async () => {
+    try {
+      await paperTradingAPI.placeTrade({ symbol: selectedSymbol, side: 'BUY', quantity: 1 });
+      toast({ title: 'Added to Paper Trading', description: `${selectedSymbol} added with qty 1` });
+    } catch (e) {
+      toast({ title: 'Failed to add', description: e instanceof Error ? e.message : 'Request failed', variant: 'destructive' });
+    }
+  };
+
+  const handleLearnMore = async (patternName: string) => {
+    try {
+      const res = await patternAPI.explainPattern(patternName);
+      setInfoContent(
+        <pre className="whitespace-pre-wrap text-xs bg-muted p-2 rounded-md border border-border">{JSON.stringify(res.data, null, 2)}</pre>
+      );
+      setIsInfoOpen(true);
+    } catch (e) {
+      toast({ title: 'Explanation unavailable', description: e instanceof Error ? e.message : 'Failed to fetch', variant: 'destructive' });
     }
   };
 
@@ -349,6 +380,7 @@ export default function Charts() {
                 <Button 
                   className="w-full bg-success text-success-foreground hover:bg-success/90"
                   data-testid="button-add-to-paper-trading"
+                  onClick={handleAddToPaperTrading}
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Add to Paper Trading
@@ -400,6 +432,7 @@ export default function Charts() {
                           size="sm" 
                           className="w-full mt-3 text-xs text-primary hover:bg-primary/10"
                           data-testid={`button-learn-more-${index}`}
+                          onClick={() => handleLearnMore(pattern.pattern_name)}
                         >
                           <Info className="h-3 w-3 mr-1" />
                           Learn More
@@ -440,6 +473,9 @@ export default function Charts() {
           </Card>
         </div>
       </div>
+      <InfoModal open={isInfoOpen} onOpenChange={setIsInfoOpen} title="Pattern Details">
+        {infoContent}
+      </InfoModal>
     </div>
   );
 }
