@@ -195,7 +195,7 @@ export default function Dashboard() {
             <p className="text-3xl font-bold text-foreground font-mono mb-2">
               {scannerStatus?.symbols_scanned || 245}/500
             </p>
-            <Progress value={coveragePercent} className="h-2" />
+            <Progress aria-label="Market coverage" value={coveragePercent} className="h-2" />
           </CardContent>
         </Card>
       </div>

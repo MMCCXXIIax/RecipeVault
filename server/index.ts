@@ -16,6 +16,23 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
+// Security and caching headers
+app.use((req, res, next) => {
+  // Basic security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-XSS-Protection', '0');
+
+  // API responses: no-store to avoid caching dynamic JSON
+  if (req.path.startsWith('/api')) {
+    res.setHeader('Cache-Control', 'no-store');
+    // Ensure charset for JSON (some auditors expect this)
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

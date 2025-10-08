@@ -82,7 +82,7 @@ export function Navigation() {
             </div>
 
             {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative" data-testid="button-notifications">
+            <Button aria-label="Notifications" variant="ghost" size="sm" className="relative" data-testid="button-notifications">
               <Bell className="h-5 w-5" />
               {activeAlerts > 0 && (
                 <Badge 
@@ -95,7 +95,7 @@ export function Navigation() {
             </Button>
 
             {/* User Profile */}
-            <Button variant="ghost" size="sm" className="flex items-center space-x-2" data-testid="button-profile">
+            <Button aria-label="Profile" variant="ghost" size="sm" className="flex items-center space-x-2" data-testid="button-profile">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-semibold">
                 TX
               </div>
@@ -103,6 +103,7 @@ export function Navigation() {
 
             {/* Mobile Menu Toggle */}
             <Button 
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               variant="ghost" 
               size="sm" 
               className="md:hidden"

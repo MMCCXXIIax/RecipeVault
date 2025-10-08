@@ -8,6 +8,32 @@ class SocketManager {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
 
+  // Normalize various backend alert payload shapes to the UI Alert shape
+  private normalizeAlert(raw: any) {
+    try {
+      const r = raw || {};
+      // handle nested structures or metadata
+      const meta = r.metadata || r.meta || {};
+      // map common variations
+      const alert = {
+        id: r.id ?? r.alert_id ?? r._id ?? undefined,
+        symbol: r.symbol ?? r.ticker ?? r.sym ?? '',
+        alert_type: r.alert_type ?? r.type ?? r.pattern_type ?? r.name ?? 'Pattern',
+        message: r.message ?? meta.message ?? undefined,
+        confidence: typeof r.confidence === 'number' ? r.confidence : (typeof r.conf === 'number' ? r.conf : (typeof meta.confidence === 'number' ? meta.confidence : undefined)),
+        confidence_pct: typeof r.confidence_pct === 'number' ? r.confidence_pct : (typeof r.confidence === 'number' ? Math.round(r.confidence * 1000) / 10 : undefined),
+        price: typeof r.price === 'number' ? r.price : (typeof r.entry === 'number' ? r.entry : undefined),
+        timestamp: r.timestamp ?? r.created_at ?? r.detected_at ?? new Date().toISOString(),
+      } as any;
+      if (alert.confidence_pct == null && typeof alert.confidence === 'number') {
+        alert.confidence_pct = Math.round(alert.confidence * 1000) / 10;
+      }
+      return alert;
+    } catch {
+      return raw;
+    }
+  }
+
   connect(): Promise<Socket> {
     return new Promise((resolve, reject) => {
       if (this.socket?.connected) {
@@ -15,13 +41,15 @@ class SocketManager {
         return;
       }
 
+      const forcePolling = (import.meta.env.VITE_SOCKET_TRANSPORT?.toLowerCase?.() === 'polling') || import.meta.env.PROD;
       this.socket = io(SOCKET_BASE, {
-        transports: ['websocket', 'polling'],
+        transports: forcePolling ? ['polling'] : ['websocket', 'polling'],
         timeout: 10000,
+        withCredentials: false,
       });
 
       this.socket.on('connect', () => {
-        console.log('Socket connected:', this.socket?.id);
+        console.log('Socket connected:', this.socket?.id, 'to', SOCKET_BASE);
         this.reconnectAttempts = 0;
         resolve(this.socket!);
       });
@@ -72,34 +100,51 @@ class SocketManager {
       this.socket = null;
     }
   }
-
+  
   subscribeToAlerts(callback: (alert: any) => void) {
     if (!this.socket) {
       throw new Error('Socket not connected');
     }
-    
     this.socket.emit('subscribe_alerts');
-    this.socket.on('pattern_alert', callback);
+    this.socket.on('pattern_alert', (payload: any) => {
+      const norm = this.normalizeAlert(payload);
+      console.debug('[socket] pattern_alert', norm);
+      callback(norm);
+    });
+    this.socket.on('new_alert', (payload: any) => {
+      const norm = this.normalizeAlert(payload);
+      console.debug('[socket] new_alert', norm);
+      callback(norm);
+    });
   }
 
   subscribeToScanResults(callback: (scanData: any) => void) {
     if (!this.socket) {
       throw new Error('Socket not connected');
     }
-    
     this.socket.emit('subscribe_scan_results');
-    this.socket.on('scan_update', callback);
+    this.socket.on('scan_update', (data: any) => {
+      console.debug('[socket] scan_update', data?.symbol ?? '', data);
+      callback(data);
+    });
+    // Also listen to background worker variant from Flask
+    this.socket.on('market_scan_update', (data: any) => {
+      console.debug('[socket] market_scan_update', data);
+      callback(data);
+    });
   }
 
   unsubscribeFromAlerts() {
     if (this.socket) {
       this.socket.off('pattern_alert');
+      this.socket.off('new_alert');
     }
   }
 
   unsubscribeFromScanResults() {
     if (this.socket) {
       this.socket.off('scan_update');
+      this.socket.off('market_scan_update');
     }
   }
 
